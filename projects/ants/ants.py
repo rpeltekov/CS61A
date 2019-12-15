@@ -42,20 +42,12 @@ class Place(object):
                 self.ant = insect
             else:
                 # BEGIN Problem 9
-                if self.ant.is_container:
-                    if self.ant.can_contain(insect):
-                        self.ant.contained_ant = insect
-                    else:
-                        assert self.ant.can_contain(insect), 'Two ants in {0}'.format(self)
-                elif insect.is_container:
-                    print("DEBUG:", self.ant)
-                    print("DEBUG:", insect)
-                    if insect.can_contain(self.ant):
-                        insect.contained_ant = self.ant
-                        self.ant = insect
-                    else:
-                        assert insect.can_contain(self.ant), 'Two ants in {0}'.format(self)
-                else:   
+                if self.ant.can_contain(insect):
+                    self.ant.contained_ant = insect
+                elif insect.can_contain(self.ant):
+                    insect.contained_ant = self.ant
+                    self.ant = insect
+                else:
                     assert self.ant is None, 'Two ants in {0}'.format(self)
                 # END Problem 9
         else:
@@ -264,7 +256,7 @@ class ThrowerAnt(Ant):
         while current_place is not beehive:
             a_bee = random_or_none(current_place.bees)
             if a_bee and current_range >= self.min_range and current_range <= self.max_range:
-                break
+                return a_bee
             else:
                 current_place = current_place.entrance
                 current_range += 1
@@ -336,10 +328,8 @@ class FireAnt(Ant):
         # BEGIN Problem 5
         current_place = self.place
         attack_damage = amount
-        self.armor -= amount
-        if self.armor <= 0:
-            self.place.remove_insect(self)
-            self.death_callback()
+        Ant.reduce_armor(self, amount)
+        if not self.place:
             attack_damage += self.damage
         for current_bee in list(current_place.bees):
             for actual_bee in current_place.bees:
@@ -427,7 +417,7 @@ class BodyguardAnt(Ant):
 
     def can_contain(self, other):
         # BEGIN Problem 9
-        return self.contained_ant is None and not other.is_container
+        return not self.contained_ant and not other.is_container
         # END Problem 9
 
     def contain_ant(self, ant):
